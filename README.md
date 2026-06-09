@@ -12,9 +12,9 @@ PDF de autorización (papel escaneado)
   pdf_Auth_extraction.py   ←  OCR con EasyOCR + PyMuPDF
   extrae: num_autorizacion, CUPS
           ↓
-  GET /capital-salud/validar-autorizacion?...   ←  FastAPI local
+  GET /{eps}/validar-autorizacion?...   ←  FastAPI local
           ↓
-  CapitalSalud_WebS.py   ←  Playwright abre Chromium headless
+  {EPS}_WebS.py   ←  Playwright abre Chromium headless
   navega el portal de la EPS y consulta las autorizaciones del paciente
           ↓
   Respuesta JSON: { valid, match, total_consultadas }
@@ -61,9 +61,12 @@ Cada scraper usa **Playwright con Chromium** para automatizar la navegación en 
 | EPS | Archivo | Estado | Integrado al API |
 |---|---|---|---|
 | Capital Salud | `CapitalSalud_WebS.py` | ✅ Funcional y completo | ✅ Sí |
-| Nueva EPS | `NuevaEPS_WebS.py` | 🔧 En desarrollo | ❌ No |
-| Colsanitas | `Colsanitas_WebS.py` | 🔧 En desarrollo | ❌ No |
-| Salud Total | `SaludTotal_WebS.py` | 🔧 En desarrollo | ❌ No |
+| Compensar | `Compensar_WebS.py` | 🔧 En desarrollo (extracción de tabla pendiente) | ✅ Sí |
+| Nueva EPS | `NuevaEPS_WebS.py` | 🔧 En desarrollo (portal con estados JSF) | ✅ Sí |
+| Colsanitas | `Colsanitas_WebS.py` | 🔧 En desarrollo (extracción pendiente) | ✅ Sí |
+| Salud Total | `SaludTotal_WebS.py` | 🔧 En desarrollo (URL del portal pendiente) | ✅ Sí |
+
+> **Nota sobre scrapers en desarrollo:** los endpoints están disponibles y el flujo de `validar_autorizacion()` está implementado con el mismo contrato que Capital Salud. Mientras la extracción de tabla no esté completa en cada portal, la función retorna una lista vacía (`[]`), lo que significa que `valid` siempre será `false` hasta que se complete la lógica de scraping.
 
 ### Capital Salud — flujo del scraper
 
@@ -80,7 +83,7 @@ Las credenciales se cargan desde `WebScrappers_Eps/.env` y nunca se hardcodean e
 
 ## API — `api/main.py`
 
-Servicio FastAPI que expone la validación de Capital Salud como endpoint HTTP.
+Servicio FastAPI que expone la validación de autorizaciones para todas las EPS integradas.
 
 ### Endpoints
 
@@ -91,11 +94,19 @@ Verifica que el servicio esté corriendo.
 { "status": "ok" }
 ```
 
-#### `GET /capital-salud/validar-autorizacion`
+#### Endpoints de validación por EPS
 
-Valida que exista una autorización activa para el paciente con el número de autorización y CUPS indicados.
+Todos los endpoints de validación comparten el mismo contrato: mismos parámetros, misma estructura de respuesta.
 
-**Parámetros (query string):**
+| EPS | Endpoint |
+|---|---|
+| Capital Salud | `GET /capital-salud/validar-autorizacion` |
+| Compensar | `GET /compensar/validar-autorizacion` |
+| Nueva EPS | `GET /nueva-eps/validar-autorizacion` |
+| Colsanitas | `GET /colsanitas/validar-autorizacion` |
+| Salud Total | `GET /salud-total/validar-autorizacion` |
+
+**Parámetros (query string) — iguales para todos los endpoints:**
 
 | Parámetro | Tipo | Requerido | Descripción |
 |---|---|---|---|
@@ -148,9 +159,13 @@ ngrok http 8000
 
 ngrok mostrará una URL pública tipo `https://xxxx.ngrok-free.app`. Esa es la URL que se comparte con los sistemas que necesiten consumir el API.
 
-**Ejemplo de llamada desde la URL pública:**
+**Ejemplo de llamadas desde la URL pública:**
 ```
 GET https://xxxx.ngrok-free.app/capital-salud/validar-autorizacion?patient_doc=3098587&id_servicio=890226&num_autorizacion=261031560358938
+GET https://xxxx.ngrok-free.app/compensar/validar-autorizacion?patient_doc=1053776586&id_servicio=890226&num_autorizacion=123456789
+GET https://xxxx.ngrok-free.app/nueva-eps/validar-autorizacion?patient_doc=51712875&id_servicio=890226&num_autorizacion=123456789
+GET https://xxxx.ngrok-free.app/colsanitas/validar-autorizacion?patient_doc=12345678&id_servicio=890226&num_autorizacion=123456789
+GET https://xxxx.ngrok-free.app/salud-total/validar-autorizacion?patient_doc=12345678&id_servicio=890226&num_autorizacion=123456789
 ```
 
 > **Nota:** La URL de ngrok cambia cada vez que se reinicia el túnel (en el plan gratuito). Para una URL fija se puede usar un dominio estático de ngrok o desplegar el API en un servidor.
@@ -164,6 +179,9 @@ GET https://xxxx.ngrok-free.app/capital-salud/validar-autorizacion?patient_doc=3
 ```env
 CAPITAL_SALUD_USERNAME=<nit_o_usuario_ips>
 CAPITAL_SALUD_PASSWORD=<contraseña>
+
+COMPENSAR_USERNAME=<usuario>
+COMPENSAR_PASSWORD=<contraseña>
 
 NUEVA_EPS_DOCUMENT_TYPE=<tipo_doc>
 NUEVA_EPS_USERNAME=<usuario>

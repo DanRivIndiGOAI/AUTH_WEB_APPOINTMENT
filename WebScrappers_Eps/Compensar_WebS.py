@@ -111,12 +111,54 @@ def consultar_autorizaciones(
             page.get_by_role("option", name="Hospitalizacion").click()
             page.get_by_role("button", name=" Enviar").click()
             page.pause()
-
+            return []
 
         finally:
             context.close()
             browser.close()
 
+
+
+def validar_autorizacion(
+    patient_doc: str,
+    id_servicio: str,
+    num_autorizacion: str,
+    meses_atras: int = 2,
+    headless: bool = True,
+) -> dict:
+    """Valida que exista una autorización del paciente con `num_autorizacion` e
+    `id_servicio` coincidentes en la misma fila.
+
+    Returns:
+        dict con:
+          - valid (bool): True si se encontró coincidencia en ambos campos.
+          - match (dict | None): la fila coincidente, o None si no hubo match.
+          - total_consultadas (int): cuántas autorizaciones se revisaron.
+    """
+    autorizaciones = consultar_autorizaciones(
+        patient_doc=patient_doc,
+        meses_atras=meses_atras,
+        headless=headless,
+    )
+
+    num_autorizacion_norm = num_autorizacion.strip()
+    id_servicio_norm = id_servicio.strip()
+
+    match = next(
+        (
+            a
+            for a in autorizaciones
+            if a["num_autorizacion"] == num_autorizacion_norm
+            and a["id_servicio"] == id_servicio_norm
+        ),
+        None,
+    )
+
+    return {
+        "valid": match is not None,
+        "match": match,
+        "total_consultadas": len(autorizaciones),
+    }
 
 if __name__ == "__main__":
     patient_doc = "1053776586"

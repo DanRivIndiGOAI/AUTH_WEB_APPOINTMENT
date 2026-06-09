@@ -14,3 +14,16 @@ wheels/
 .env.*
 !.env.example
 
+# Graphify — salidas del knowledge graph (generadas, no versionar)
+graphify-out/
+
+# Archivos temporales de graphify (se crean durante el pipeline)
+.graphify_detect.json
+.graphify_ast.json
+.graphify_semantic_new.json
+.graphify_cached.json
+.graphify_uncached.txt
+.graphify_python
+.graphify_chunk_*.json
+.graphify_step_*.py
+.graphify_transcripts.json
