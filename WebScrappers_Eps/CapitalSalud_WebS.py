@@ -152,9 +152,9 @@ def validar_autorizacion(
     )
 
     return {
-        "valid": match is not None,
-        "match": match,
-        "total_consultadas": len(autorizaciones),
+        "valid": match is not None, # True si se encontró una fila con ambos campos coincidentes
+        "match": match,   #Par num autorizacion - id_servicio que coincide exactamente, o None si no hay match
+        "total_consultadas": len(autorizaciones), #Cantidad de autorizaciones consultadas en el portal para el paciente en el rango de fechas
     }
 
 
