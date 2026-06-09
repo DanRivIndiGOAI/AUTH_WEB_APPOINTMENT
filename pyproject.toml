@@ -1,0 +1,18 @@
+[project]
+name = "auth-web-appointment"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "easyocr>=1.7.2",
+    "pymupdf>=1.27.1",
+    "pypdf2>=3.0.1",
+    "playwright>=1.55.0",
+    "selenium>=4.35.0",
+    "webdriver-manager>=4.0.2",
+    "python-dateutil>=2.9.0.post0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-dotenv>=1.0.1",
+]
